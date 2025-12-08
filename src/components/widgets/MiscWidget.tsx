@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
+// import { useEffect, useState } from "react";
+// import type { SupabaseClient } from "@supabase/supabase-js";
 
-import Card from "./Card";
+// import Card from "./Card";
 
 
 export default function MiscWidget() {

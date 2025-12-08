@@ -1,6 +1,5 @@
 // src/helpers.tsx
 
-import React from 'react';
 import type { MatchupPair } from './FantasyTypes';
 
 // --- Helper: Avatar Component (Tiny Version) ---

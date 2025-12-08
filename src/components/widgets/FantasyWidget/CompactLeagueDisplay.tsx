@@ -1,6 +1,5 @@
 // src/CompactLeagueDisplay.tsx
 
-import React from 'react';
 import { motion } from 'framer-motion';
 import type { LeagueData } from './FantasyTypes';
 import { CompactMatchupRow } from './FantasyHelpers';

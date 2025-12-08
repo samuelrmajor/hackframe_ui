@@ -1,6 +1,6 @@
 // src/MultiLeagueManager.tsx
 
-import React, { useState, useEffect } from 'react'; // Must import useEffect
+import { useState, useEffect } from 'react'; // Must import useEffect
 import { useLeagueData } from './useLeagueData';
 import { CompactLeagueDisplay } from './CompactLeagueDisplay';
 import { motion, AnimatePresence } from 'framer-motion';

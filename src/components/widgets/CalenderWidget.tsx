@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
+// import type { SupabaseClient } from "@supabase/supabase-js";
 
 import Card from "./Card";
 
