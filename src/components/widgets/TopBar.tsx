@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { motion } from "framer-motion";
 
