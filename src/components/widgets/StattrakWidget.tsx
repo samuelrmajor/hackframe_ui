@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Session, SupabaseClient } from "@supabase/supabase-js";
 
 
 import Card from "./Card";
 
 interface StattrakWidgetProps {
+    session: Session;
     supabase: SupabaseClient;
     widgetId?: number;
 }
 
-export default function StattrakWidget({ supabase, widgetId = 1 }: StattrakWidgetProps) {
+export default function StattrakWidget({ session, supabase, widgetId = 1 }: StattrakWidgetProps) {
     const [stattrak_data, setStattrakData] = useState<any | null>(null);
 
     useEffect(() => {
@@ -35,13 +36,13 @@ export default function StattrakWidget({ supabase, widgetId = 1 }: StattrakWidge
 
             // then set up realtime
             try {
-                await supabase.realtime.setAuth(); // Needed for Realtime Authorization
+                await supabase.realtime.setAuth(session.access_token); // Needed for Realtime Authorization
                 const channel = supabase
-                    .channel(`id:${widgetId}`, {
+                    .channel(`widget_stattrak:${widgetId}:update`, {
                         config: { private: true },
                     })
-                    .on("broadcast", { event: "UPDATE" }, (payload) => {
-                        console.log("UPDATE", payload);
+                    .on("broadcast", { event: 'stattrak_update' }, (payload) => {
+                        console.log("Stattrak UPDATE", payload);
                         if (payload.payload?.record) {
                             setStattrakData(payload.payload.record);
                         }

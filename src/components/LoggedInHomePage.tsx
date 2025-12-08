@@ -23,12 +23,17 @@ export default function LoggedInHomePage({ session, supabase, onLogout }: Framed
     <div className="w-screen h-screen bg-gradient-to-br from-gray-900 to-black text-white flex flex-col p-4">
         <TopBar/>
       <main className="grid grid-cols-3 gap-4 flex-1 auto-rows-fr min-h-0">
-        <DiscordWidget supabase={supabase} widgetId={1}/>
-        <FantasyWidget />
-        <SportsWidget />
-        <StattrakWidget supabase={supabase} widgetId={1} />
-        <MiscWidget />
         <CalendarWidget />
+        
+        <FantasyWidget />
+        <StattrakWidget session={session} supabase={supabase} widgetId={1} />
+        <MiscWidget />
+        <SportsWidget />
+        
+        
+        
+        <DiscordWidget session={session} supabase={supabase} widgetId={1}/>
+        
       </main>
     </div>
   );

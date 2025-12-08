@@ -1,51 +1,58 @@
 
 const DiscordLiveIcon = () => {
     return (
-    <div className="iconGroup__07f91">
-        <div className="live_a7acae liveSmall_a7acae eyebrow_a7acae textBadge__2b1f5 base__2b1f5 eyebrow__2b1f5 liveShapeRound_a7acae" style={{ backgroundColor: "var(--red-400)" }}>
-            Live
+        <div 
+            className="iconGroup__07f91"
+            style={{
+                cursor: 'pointer',
+                border: 0,
+                fontFamily: 'inherit',
+                fontSize: '100%',
+                fontStyle: 'inherit',
+                fontWeight: 'inherit',
+                padding: 0,
+                verticalAlign: 'baseline',
+                outline: 0,
+                alignItems: 'center',
+                display: 'flex',
+                gap: '4px',
+                margin: 0
+            }}
+        >
+            <div 
+                className="live_a7acae liveSmall_a7acae eyebrow_a7acae textBadge__2b1f5 base__2b1f5 eyebrow__2b1f5 liveShapeRound_a7acae"
+                style={{
+                    cursor: 'pointer',
+                    border: 0,
+                    fontStyle: 'inherit',
+                    margin: 0,
+                    verticalAlign: 'baseline',
+                    outline: 0,
+                    fontFamily: 'var(--font-display, inherit)',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    letterSpacing: '.02em',
+                    lineHeight: 1.3333333333333333,
+                    textTransform: 'uppercase',
+                    boxSizing: 'border-box',
+                    color: 'var(--white, white)',
+                    flex: '0 0 auto',
+                    height: '16px',
+                    minHeight: '16px',
+                    minWidth: '16px',
+                    textAlign: 'center',
+                    borderRadius: 'var(--radius-sm, 4px)',
+                    overflow: 'hidden',
+                    padding: '0 6px',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    backgroundColor: 'var(--red-400, #f23f43)'
+                }}
+            >
+                LIVE
+            </div>
         </div>
-    </div>);
-}
-// ----div1-----
-// list-style: none;
-//     cursor: pointer;
-//     border: 0;
-//     font-family: inherit;
-//     font-size: 100%;
-//     font-style: inherit;
-//     font-weight: inherit;
-//     padding: 0;
-//     vertical-align: baseline;
-//     outline: 0;
-//     align-items: center;
-//     display: flex;
-//     gap: 4px;
-//     margin: 0;
-// ---------div2
-//         list-style: none;
-//     cursor: pointer;
-//     border: 0;
-//     font-style: inherit;
-//     margin: 0;
-//     vertical-align: baseline;
-//     outline: 0;
-//     font-family: var(--font-display);
-//     font-size: 12px;
-//     font-weight: 700;
-//     letter-spacing: .02em;
-//     line-height: 1.3333333333333333;
-//     text-transform: uppercase;
-//     box-sizing: border-box;
-//     color: var(--white);
-//     flex: 0 0 auto;
-//     height: 16px;
-//     min-height: 16px;
-//     min-width: 16px;
-//     text-align: center;
-//     border-radius: var(--radius-sm);
-//     overflow: hidden;
-//     padding: 0 6px;
-//     text-overflow: ellipsis;
-//     white-space: nowrap;
-//     background-color: var(--red-400);
+    );
+};
+
+export default DiscordLiveIcon;
