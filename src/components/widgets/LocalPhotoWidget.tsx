@@ -10,7 +10,6 @@ export default function LocalPhotoWidget({ folderPath }: LocalPhotoWidgetProps) 
   const [photos, setPhotos] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSelectedFolder, setHasSelectedFolder] = useState(false);
-  const [needsPermission, setNeedsPermission] = useState(true);
 
   // Configure these settings
   const CYCLE_INTERVAL = 10000; // 10 seconds between photos
@@ -91,12 +90,10 @@ export default function LocalPhotoWidget({ folderPath }: LocalPhotoWidgetProps) 
       setPhotos(photoUrls);
       setCurrentPhotoIndex(0);
       setHasSelectedFolder(true);
-      setNeedsPermission(false);
     } catch (error) {
       console.error('Error reading photos from handle:', error);
       // Permission might have been revoked, need to re-request
       setHasSelectedFolder(false);
-      setNeedsPermission(true);
     }
   };
 
@@ -156,7 +153,6 @@ export default function LocalPhotoWidget({ folderPath }: LocalPhotoWidgetProps) 
       
       // No saved handle or permission denied, need user to select
       setIsLoading(false);
-      setNeedsPermission(true);
       
       // Small delay to avoid immediate popup
       setTimeout(() => {
