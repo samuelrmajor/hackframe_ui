@@ -5,4 +5,11 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  css: {
+    postcss: './postcss.config.js',
+  },
+  build: {
+    target: 'chrome106',
+    cssTarget: 'chrome106',
+  }
 })
