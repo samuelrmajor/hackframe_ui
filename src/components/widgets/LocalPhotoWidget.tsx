@@ -17,6 +17,9 @@ export default function LocalPhotoWidget({ folderPath }: LocalPhotoWidgetProps) 
   const DB_NAME = 'LocalPhotoWidget';
   const STORE_NAME = 'directoryHandles';
   const HANDLE_KEY = `folder_${folderPath}`;
+  
+  // Check if File System Access API is supported (desktop browsers)
+  const supportsFileSystemAccess = 'showDirectoryPicker' in window;
 
   // Open IndexedDB
   const openDB = (): Promise<IDBDatabase> => {
@@ -97,7 +100,26 @@ export default function LocalPhotoWidget({ folderPath }: LocalPhotoWidgetProps) 
     }
   };
 
-  // Load photos from user-selected directory
+  // Load photos from file input (fallback for mobile/Android)
+  const loadPhotosFromFileInput = (files: FileList) => {
+    setIsLoading(true);
+    const photoUrls: string[] = [];
+    
+    Array.from(files).forEach(file => {
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      if (extension && SUPPORTED_FORMATS.includes(extension)) {
+        const url = URL.createObjectURL(file);
+        photoUrls.push(url);
+      }
+    });
+    
+    setPhotos(photoUrls);
+    setCurrentPhotoIndex(0);
+    setHasSelectedFolder(true);
+    setIsLoading(false);
+  };
+
+  // Load photos from user-selected directory (desktop)
   const loadPhotosFromDirectory = async () => {
     setIsLoading(true);
     
@@ -122,12 +144,27 @@ export default function LocalPhotoWidget({ folderPath }: LocalPhotoWidgetProps) 
     setIsLoading(false);
   };
 
-  // Try to load from saved handle, or prompt user
+  // Handle file selection button click
+  const handleFileSelect = () => {
+    if (supportsFileSystemAccess) {
+      loadPhotosFromDirectory();
+    } else {
+      // Trigger file input for mobile
+      document.getElementById(`file-input-${HANDLE_KEY}`)?.click();
+    }
+  };
+
+  // Try to load from saved handle (desktop only), or prompt user
   useEffect(() => {
     const initializePhotos = async () => {
+      if (!supportsFileSystemAccess) {
+        // Mobile: just wait for user to select files
+        return;
+      }
+
       setIsLoading(true);
       
-      // Try to load saved directory handle
+      // Try to load saved directory handle (desktop only)
       const savedHandle = await loadDirectoryHandle();
       
       if (savedHandle) {
@@ -196,14 +233,25 @@ export default function LocalPhotoWidget({ folderPath }: LocalPhotoWidgetProps) 
       <Card centered={true}>
         <div className="text-center">
           <div className="text-white/70 text-sm mb-4">📷 Local Photos</div>
+          {/* Hidden file input for mobile browsers */}
+          {!supportsFileSystemAccess && (
+            <input
+              id={`file-input-${HANDLE_KEY}`}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => e.target.files && loadPhotosFromFileInput(e.target.files)}
+              className="hidden"
+            />
+          )}
           <button
-            onClick={loadPhotosFromDirectory}
+            onClick={handleFileSelect}
             className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white text-sm transition-colors border border-white/30"
           >
-            Select Photo Folder
+            {supportsFileSystemAccess ? 'Select Photo Folder' : 'Select Photos'}
           </button>
           <div className="text-white/50 text-xs mt-3">
-            Folder: {folderPath}
+            {supportsFileSystemAccess ? `Folder: ${folderPath}` : 'Choose multiple photos'}
           </div>
         </div>
       </Card>
@@ -223,11 +271,21 @@ export default function LocalPhotoWidget({ folderPath }: LocalPhotoWidgetProps) 
       <Card centered={true}>
         <div className="text-white/70 text-sm text-center">
           <div className="mb-3">📷 No photos found</div>
+          {!supportsFileSystemAccess && (
+            <input
+              id={`file-input-${HANDLE_KEY}`}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => e.target.files && loadPhotosFromFileInput(e.target.files)}
+              className="hidden"
+            />
+          )}
           <button
-            onClick={loadPhotosFromDirectory}
+            onClick={handleFileSelect}
             className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded text-white text-xs transition-colors"
           >
-            Try Different Folder
+            {supportsFileSystemAccess ? 'Try Different Folder' : 'Select Photos'}
           </button>
         </div>
       </Card>
