@@ -13,7 +13,7 @@ interface MultiLeagueManagerProps {
     cycleInterval?: number;
 }
 
-export function MultiLeagueManager({ leagueIds, userId, cycleInterval = 12000 }: MultiLeagueManagerProps) {
+export function MultiLeagueManager({ leagueIds, userId, cycleInterval = 20000 }: MultiLeagueManagerProps) {
     const [activeIndex, setActiveIndex] = useState(0);
     const activeLeagueId = leagueIds[activeIndex];
 

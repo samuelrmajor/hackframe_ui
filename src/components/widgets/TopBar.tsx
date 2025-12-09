@@ -11,6 +11,12 @@ interface WeatherData {
     condition: string;
 }
 
+interface LocationData {
+    timezone: string;
+    city: string;
+    state: string;
+}
+
 const getWeatherEmoji = (condition: string): string => {
     const cond = condition.toLowerCase();
     if (cond.includes("clear") || cond.includes("sunny")) return "☀️";
@@ -27,6 +33,7 @@ const getWeatherEmoji = (condition: string): string => {
 export default function TopBar({ zipcode }: TopBarProps) {
     const [now, setNow] = useState(new Date());
     const [weather, setWeather] = useState<WeatherData | null>(null);
+    const [location, setLocation] = useState<LocationData | null>(null);
 
     useEffect(() => {
         const t = setInterval(() => setNow(new Date()), 1000);
@@ -49,6 +56,13 @@ export default function TopBar({ zipcode }: TopBarProps) {
                 const zipData = await zipResponse.json();
                 const lat = zipData.places[0].latitude;
                 const lon = zipData.places[0].longitude;
+                
+                // Store location data including timezone
+                setLocation({
+                    timezone: zipData.places[0]['timezone'] || 'America/New_York',
+                    city: zipData.places[0]['place name'],
+                    state: zipData.places[0]['state abbreviation']
+                });
                 
                 // Get weather station points from weather.gov
                 const pointsResponse = await fetch(
@@ -88,12 +102,19 @@ export default function TopBar({ zipcode }: TopBarProps) {
         }
     }, [zipcode]);
 
+    const timeZone = location?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
     const dateStr = now.toLocaleDateString(undefined, {
         weekday: "short",
         month: "short",
         day: "numeric",
+        timeZone: timeZone,
     });
-    const timeStr = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const timeStr = now.toLocaleTimeString([], { 
+        hour: "numeric", 
+        minute: "2-digit",
+        timeZone: timeZone,
+    });
 
     return (
         <motion.header
