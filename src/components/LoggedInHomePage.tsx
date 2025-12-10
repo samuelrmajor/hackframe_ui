@@ -44,7 +44,24 @@ export default function LoggedInHomePage({ session, supabase, onLogout }: Framed
     >
         <TopBar zipcode="12210"/>
       <main className="grid grid-cols-3 gap-4 flex-1 auto-rows-fr min-h-0">
-        <CalendarWidget />
+        <CalendarWidget birthdays={[
+          { name: "Beanie", month: 1, day: 15 },
+          { name: "Evan", month: 2, day: 20 },
+          { name: "Kevin", month: 5, day: 9 },
+          { name: "Gus", month: 5, day: 30 },
+          { name: "Sam M", month: 6, day: 12 },
+          { name: "Harry", month: 7, day: 1 },
+          { name: "Niko", month: 8, day: 20 },
+          { name: "Taylor", month: 9, day: 27 },
+          { name: "Chase", month: 9, day: 30 },
+          { name: "Jackson", month: 1, day: 18 },
+          { name: "Sam P", month: 2, day: 2 },
+          { name: "Michael", month: 2, day: 20 },
+          { name: "Ido", month: 3, day: 16 },
+          { name: "Bibble", month: 3, day: 20 },
+          { name: "Dave", month: 5, day: 12 },
+          { name: "Mark", month: 10, day: 20 },
+        ]} />
         <LocalPhotoWidget session={session} supabase={supabase} />
         <StattrakWidget session={session} supabase={supabase} widgetId={1} />
         <ChristmasWidget />
