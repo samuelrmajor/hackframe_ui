@@ -92,6 +92,15 @@ export default function SupabasePhotoWidget({
     return () => clearInterval(refreshInterval);
   }, [session.user.id, bucketName]);
 
+  // Preload next image
+  useEffect(() => {
+    if (photos.length <= 1) return;
+    
+    const nextIndex = (currentPhotoIndex + 1) % photos.length;
+    const img = new Image();
+    img.src = photos[nextIndex];
+  }, [currentPhotoIndex, photos]);
+
   // Auto-cycle through photos
   useEffect(() => {
     if (photos.length <= 1) return;
