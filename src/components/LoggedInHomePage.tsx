@@ -45,7 +45,7 @@ export default function LoggedInHomePage({ session, supabase, onLogout }: Framed
         <TopBar zipcode="12210"/>
       <main className="grid grid-cols-3 gap-4 flex-1 auto-rows-fr min-h-0">
         <CalendarWidget 
-          timezone="America/New_York"
+          timezone="Pacific/Honolulu"
           birthdays={[
           { name: "Beanie", month: 1, day: 15 },
           { name: "Evan", month: 2, day: 20 },
@@ -66,7 +66,7 @@ export default function LoggedInHomePage({ session, supabase, onLogout }: Framed
         ]} />
         <LocalPhotoWidget session={session} supabase={supabase} />
         <StattrakWidget session={session} supabase={supabase} widgetId={1} />
-        <ChristmasWidget zipcode="12210" />
+        <ChristmasWidget timezone="Pacific/Honolulu" />
         <DiscordWidget session={session} supabase={supabase} widgetId={1}/>
         <MultiLeagueManager userId = {"997726544653021184"} leagueIds={["1264635784598663168", "1208435206395011072", "1200542341140578304"]} />
       </main>

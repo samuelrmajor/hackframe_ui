@@ -25,24 +25,17 @@ export default function CalendarWidget({ birthdays = [], timezone = "America/New
   const [currentDate, setCurrentDate] = useState(now);
   const [selectedDay, setSelectedDay] = useState<number | null>(now.getDate());
 
-  // Fetch actual current time from API on mount
+  // Get current time in specified timezone on mount
   useEffect(() => {
-    const fetchCurrentTime = async () => {
-      try {
-        const response = await fetch(`https://worldtimeapi.org/api/timezone/${timezone}`);
-        if (response.ok) {
-          const data = await response.json();
-          const actualTime = new Date(data.datetime);
-          setNow(actualTime);
-          setCurrentDate(actualTime);
-          setSelectedDay(actualTime.getDate());
-        }
-      } catch (error) {
-        console.error("Error fetching time from API:", error);
-      }
+    const getCurrentTimeInTimezone = () => {
+      const now = new Date();
+      const tzTime = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
+      setNow(tzTime);
+      setCurrentDate(tzTime);
+      setSelectedDay(tzTime.getDate());
     };
     
-    fetchCurrentTime();
+    getCurrentTimeInTimezone();
   }, [timezone]);
   
   const year = currentDate.getFullYear();
@@ -110,21 +103,11 @@ export default function CalendarWidget({ birthdays = [], timezone = "America/New
     setSelectedDay(null);
   };
 
-  const goToToday = async () => {
-    try {
-      const response = await fetch(`https://worldtimeapi.org/api/timezone/${timezone}`);
-      if (response.ok) {
-        const data = await response.json();
-        const actualTime = new Date(data.datetime);
-        setNow(actualTime);
-        setCurrentDate(actualTime);
-        setSelectedDay(actualTime.getDate());
-      }
-    } catch (error) {
-      console.error("Error fetching time:", error);
-      setCurrentDate(now);
-      setSelectedDay(now.getDate());
-    }
+  const goToToday = () => {
+    const todayInTz = new Date(new Date().toLocaleString("en-US", { timeZone: timezone }));
+    setNow(todayInTz);
+    setCurrentDate(todayInTz);
+    setSelectedDay(todayInTz.getDate());
   };
   
   const handleDayClick = (day: number, isCurrentMonthDay: boolean) => {
