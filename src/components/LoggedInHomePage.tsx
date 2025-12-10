@@ -8,7 +8,7 @@ import CalendarWidget from "./widgets/CalenderWidget";
 import TopBar from "./widgets/TopBar";
 import { MultiLeagueManager } from "./widgets/FantasyWidget/MultiLeagueManager";
 import ChristmasWidget from "./widgets/ChristmasWidget";
-import LocalPhotoWidget from "./widgets/LocalPhotoWidget";
+import LocalPhotoWidget from "./widgets/UploadedPhotosWidget";
 
 
 interface FramedInfoPanelProps {
@@ -45,7 +45,7 @@ export default function LoggedInHomePage({ session, supabase, onLogout }: Framed
         <TopBar zipcode="12210"/>
       <main className="grid grid-cols-3 gap-4 flex-1 auto-rows-fr min-h-0">
         <CalendarWidget />
-        <LocalPhotoWidget folderPath="C:\\Users\\Sam\\test" />
+        <LocalPhotoWidget session={session} supabase={supabase} />
         <StattrakWidget session={session} supabase={supabase} widgetId={1} />
         <ChristmasWidget />
         <DiscordWidget session={session} supabase={supabase} widgetId={1}/>
