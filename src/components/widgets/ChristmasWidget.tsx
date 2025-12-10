@@ -41,53 +41,77 @@ export default function ChristmasWidget({ zipcode = "10001" }: ChristmasWidgetPr
   }, [zipcode]);
 
   useEffect(() => {
-    const calculateDaysUntilChristmas = () => {
-      // Get current date in the specified timezone
-      const today = new Date(new Date().toLocaleString("en-US", { timeZone: timezone }));
-      const currentYear = today.getFullYear();
-      let christmas = new Date(currentYear, 11, 25); // December 25th
-      
-      // If Christmas has passed this year, calculate for next year
-      if (today > christmas) {
-        christmas = new Date(currentYear + 1, 11, 25);
+    const calculateDaysUntilChristmas = async () => {
+      try {
+        // Fetch actual current time from WorldTimeAPI
+        const response = await fetch(`https://worldtimeapi.org/api/timezone/${timezone}`);
+        if (!response.ok) {
+          console.warn("Failed to fetch time from API");
+          return;
+        }
+        
+        const data = await response.json();
+        const today = new Date(data.datetime);
+        const currentYear = today.getFullYear();
+        let christmas = new Date(currentYear, 11, 25); // December 25th
+        
+        // If Christmas has passed this year, calculate for next year
+        if (today > christmas) {
+          christmas = new Date(currentYear + 1, 11, 25);
+        }
+        
+        const timeDiff = christmas.getTime() - today.getTime();
+        const days = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        setDaysUntilChristmas(days);
+      } catch (error) {
+        console.error("Error calculating days until Christmas:", error);
       }
-      
-      const timeDiff = christmas.getTime() - today.getTime();
-      const days = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-      setDaysUntilChristmas(days);
     };
 
     calculateDaysUntilChristmas();
     
-    // Calculate time until midnight in the specified timezone
-    const calculateTimeUntilMidnight = () => {
-      const now = new Date();
-      const nowInTz = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
-      
-      // Get tomorrow at midnight in the target timezone
-      const tomorrow = new Date(nowInTz);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-      
-      // Calculate milliseconds until midnight in that timezone
-      const msUntilMidnight = tomorrow.getTime() - nowInTz.getTime();
-      return msUntilMidnight > 0 ? msUntilMidnight : 1000; // At least 1 second
+    // Calculate time until midnight in the specified timezone using API
+    const calculateTimeUntilMidnight = async () => {
+      try {
+        const response = await fetch(`https://worldtimeapi.org/api/timezone/${timezone}`);
+        if (!response.ok) return 24 * 60 * 60 * 1000; // Default to 24 hours
+        
+        const data = await response.json();
+        const nowInTz = new Date(data.datetime);
+        
+        // Get tomorrow at midnight in the target timezone
+        const tomorrow = new Date(nowInTz);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        
+        // Calculate milliseconds until midnight in that timezone
+        const msUntilMidnight = tomorrow.getTime() - nowInTz.getTime();
+        return msUntilMidnight > 0 ? msUntilMidnight : 1000; // At least 1 second
+      } catch (error) {
+        console.error("Error calculating time until midnight:", error);
+        return 24 * 60 * 60 * 1000; // Default to 24 hours
+      }
     };
     
-    const scheduleNextUpdate = () => {
-      const timeUntilMidnight = calculateTimeUntilMidnight();
+    let timeoutId: number | undefined;
+    
+    const scheduleNextUpdate = async () => {
+      const timeUntilMidnight = await calculateTimeUntilMidnight();
       
-      return setTimeout(() => {
+      timeoutId = setTimeout(() => {
         calculateDaysUntilChristmas();
         // Schedule the next update
-        const interval = scheduleNextUpdate();
-        return () => clearTimeout(interval);
+        scheduleNextUpdate();
       }, timeUntilMidnight);
     };
     
-    const timeout = scheduleNextUpdate();
+    scheduleNextUpdate();
 
-    return () => clearTimeout(timeout);
+    return () => {
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [timezone]);
 
   return (

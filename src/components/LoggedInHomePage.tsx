@@ -44,7 +44,9 @@ export default function LoggedInHomePage({ session, supabase, onLogout }: Framed
     >
         <TopBar zipcode="12210"/>
       <main className="grid grid-cols-3 gap-4 flex-1 auto-rows-fr min-h-0">
-        <CalendarWidget birthdays={[
+        <CalendarWidget 
+          timezone="America/New_York"
+          birthdays={[
           { name: "Beanie", month: 1, day: 15 },
           { name: "Evan", month: 2, day: 20 },
           { name: "Kevin", month: 5, day: 9 },
