@@ -18,7 +18,7 @@ export default function SupabasePhotoWidget({
   const [isLoading, setIsLoading] = useState(true);
 
   // Configure these settings
-  const CYCLE_INTERVAL = 10000; // 10 seconds between photos
+  const CYCLE_INTERVAL = 15000; // 10 seconds between photos
   const SUPPORTED_FORMATS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
 
   // Fetch photos from Supabase storage

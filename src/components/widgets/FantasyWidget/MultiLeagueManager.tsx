@@ -11,9 +11,10 @@ interface MultiLeagueManagerProps {
     userId?: string; 
     // New optional prop for interval time (defaults to 5000ms)
     cycleInterval?: number;
+    disableAnimation?: boolean;
 }
 
-export function MultiLeagueManager({ leagueIds, userId, cycleInterval = 30000 }: MultiLeagueManagerProps) {
+export function MultiLeagueManager({ leagueIds, userId, cycleInterval = 30000, disableAnimation = false }: MultiLeagueManagerProps) {
     const [activeIndex, setActiveIndex] = useState(0);
     const activeLeagueId = leagueIds[activeIndex];
 
@@ -58,22 +59,28 @@ export function MultiLeagueManager({ leagueIds, userId, cycleInterval = 30000 }:
                 className="w-full max-w-sm h-[350px] cursor-pointer relative" 
                 onClick={handleClick}
             >
-                <AnimatePresence initial={false} mode="wait">
-                    <motion.div
-                        key={activeLeagueId}
-                        className="absolute inset-0"
-                        variants={variants}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        transition={{
-                            x: { type: "spring", stiffness: 300, damping: 30 },
-                            opacity: { duration: 0.2 }
-                        }}
-                    >
+                {disableAnimation ? (
+                    <div className="absolute inset-0">
                         <CompactLeagueDisplay data={activeLeagueData} />
-                    </motion.div>
-                </AnimatePresence>
+                    </div>
+                ) : (
+                    <AnimatePresence initial={false} mode="wait">
+                        <motion.div
+                            key={activeLeagueId}
+                            className="absolute inset-0"
+                            variants={variants}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            transition={{
+                                x: { type: "spring", stiffness: 300, damping: 30 },
+                                opacity: { duration: 0.2 }
+                            }}
+                        >
+                            <CompactLeagueDisplay data={activeLeagueData} />
+                        </motion.div>
+                    </AnimatePresence>
+                )}
             </div>
         </div>
     );
