@@ -3,6 +3,26 @@
 import { useEffect, useState } from 'react';
 import type { LeagueData, MatchupPair, TeamMatchup } from './FantasyTypes';
 
+const CACHE_DURATION = 3 * 60 * 60 * 1000; // 3 hours in ms
+
+const fetchWithCache = async (key: string, url: string) => {
+    const cached = localStorage.getItem(key);
+    if (cached) {
+        try {
+            const { timestamp, data } = JSON.parse(cached);
+            if (Date.now() - timestamp < CACHE_DURATION) {
+                return data;
+            }
+        } catch (e) {
+            console.error("Error parsing cache", e);
+        }
+    }
+    const response = await fetch(url);
+    const data = await response.json();
+    localStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), data }));
+    return data;
+};
+
 // --- Custom Hook to Fetch and Process Data ---
 export const useLeagueData = (leagueId: string, userId?: string): LeagueData => { 
   const [data, setData] = useState<LeagueData>({
@@ -20,22 +40,23 @@ export const useLeagueData = (leagueId: string, userId?: string): LeagueData => 
 
     const fetchData = async () => {
       try {
-        setData(prev => ({ ...prev, loading: true, error: null }));
+        // Don't set loading to true on every refresh if we already have data
+        // setData(prev => ({ ...prev, loading: true, error: null }));
         
-        // 1. Get League Details and Week concurrently
+        // 1. Get League Details and Week concurrently (Cached)
         const [stateData, leagueDetails] = await Promise.all([
-             fetch("https://api.sleeper.app/v1/state/nfl").then(r => r.json()),
-             fetch(`https://api.sleeper.app/v1/league/${leagueId}`).then(r => r.json()),
+             fetchWithCache('sleeper_nfl_state', "https://api.sleeper.app/v1/state/nfl"),
+             fetchWithCache(`sleeper_league_${leagueId}`, `https://api.sleeper.app/v1/league/${leagueId}`),
         ]);
         
         const currentWeek = stateData.week;
         const leagueName = leagueDetails.name || "Fantasy League";
         const leagueAvatar = leagueDetails.avatar || null; 
 
-        // 2. Fetch Users, Rosters, Matchups Parallel
+        // 2. Fetch Users, Rosters (Cached), Matchups (Fresh)
         const [users, rosters, matchups] = await Promise.all([
-          fetch(`https://api.sleeper.app/v1/league/${leagueId}/users`).then(r => r.json()),
-          fetch(`https://api.sleeper.app/v1/league/${leagueId}/rosters`).then(r => r.json()),
+          fetchWithCache(`sleeper_users_${leagueId}`, `https://api.sleeper.app/v1/league/${leagueId}/users`),
+          fetchWithCache(`sleeper_rosters_${leagueId}`, `https://api.sleeper.app/v1/league/${leagueId}/rosters`),
           fetch(`https://api.sleeper.app/v1/league/${leagueId}/matchups/${currentWeek}`).then(r => r.json())
         ]);
         
