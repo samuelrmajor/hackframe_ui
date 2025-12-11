@@ -147,7 +147,10 @@ export default function TopBar({ zipcode }: TopBarProps) {
             <div className="flex items-center gap-4">
                 <div className="text-gray-200 text-lg">{dateStr}</div>
                 {daysUntilChristmas !== null && (
-                    <div className="flex items-center gap-2 text-green-400 font-bold border-l border-white/20 pl-4">
+                    <div 
+                        className="flex items-center gap-2 font-bold border-l border-white/20 pl-4"
+                        style={{ color: '#4ade80' }}
+                    >
                         <span>🎄</span>
                         <span>{daysUntilChristmas === 0 ? "Merry Christmas!" : `${daysUntilChristmas} days`}</span>
                     </div>

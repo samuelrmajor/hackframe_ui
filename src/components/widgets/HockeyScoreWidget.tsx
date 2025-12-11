@@ -32,7 +32,11 @@ interface NHLResponse {
     games: Game[];
 }
 
-export default function HockeyScoreWidget() {
+interface HockeyScoreWidgetProps {
+    timezone?: string;
+}
+
+export default function HockeyScoreWidget({ timezone = "America/New_York" }: HockeyScoreWidgetProps) {
     const [games, setGames] = useState<Game[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -85,7 +89,7 @@ export default function HockeyScoreWidget() {
                         <div className="text-white/50 text-[10px] text-center py-4">No games</div>
                     ) : (
                         games.map((game) => (
-                            <GameItem key={game.id} game={game} />
+                            <GameItem key={game.id} game={game} timezone={timezone} />
                         ))
                     )}
                 </div>
@@ -94,13 +98,17 @@ export default function HockeyScoreWidget() {
     );
 }
 
-function GameItem({ game }: { game: Game }) {
+function GameItem({ game, timezone }: { game: Game; timezone: string }) {
     const isLive = game.status === "LIVE" || game.status === "CRIT";
     const isPre = game.status === "PRE" || game.status === "FUT";
     const isFinal = game.status === "FINAL" || game.status === "OFF";
 
     const formatTime = (utcTime: string) => {
-        return new Date(utcTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        return new Date(utcTime).toLocaleTimeString("en-US", { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            timeZone: timezone 
+        });
     };
 
     return (
@@ -132,10 +140,16 @@ function GameItem({ game }: { game: Game }) {
                 )}
                 
                 {isLive && (
-                    <span className="text-[8px] text-red-400 font-bold animate-pulse flex items-center gap-1 leading-none">
-                        <span className="w-1 h-1 rounded-full bg-red-500"></span>
+                    <div 
+                        className="text-[8px] font-bold animate-pulse flex items-center gap-1 leading-none"
+                        style={{ color: '#f87171' }}
+                    >
+                        <div 
+                            className="w-1 h-1 rounded-full"
+                            style={{ backgroundColor: '#ef4444', minWidth: '4px', minHeight: '4px' }}
+                        />
                         {game.liveInfo?.periodType === 'REG' ? `P${game.liveInfo?.period}` : game.liveInfo?.periodType} {game.liveInfo?.timeRemaining || ""}
-                    </span>
+                    </div>
                 )}
                 {isFinal && (
                     <span className="text-[8px] text-white/40 font-medium uppercase tracking-wide leading-none">Final</span>

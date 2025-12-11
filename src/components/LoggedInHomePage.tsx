@@ -66,7 +66,7 @@ export default function LoggedInHomePage({ session, supabase, onLogout }: Framed
         ]} />
         <LocalPhotoWidget session={session} supabase={supabase} />
         <StattrakWidget session={session} supabase={supabase} widgetId={1} />
-        <HockeyScoreWidget />
+        <HockeyScoreWidget timezone="Pacific/Honolulu" />
         <DiscordWidget session={session} supabase={supabase} widgetId={1}/>
         <MultiLeagueManager userId = {"997726544653021184"} leagueIds={["1264635784598663168", "1208435206395011072", "1200542341140578304"]} />
       </main>
