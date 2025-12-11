@@ -7,8 +7,8 @@ import StattrakWidget from "./widgets/StattrakWidget";
 import CalendarWidget from "./widgets/CalenderWidget";
 import TopBar from "./widgets/TopBar";
 import { MultiLeagueManager } from "./widgets/FantasyWidget/MultiLeagueManager";
-import ChristmasWidget from "./widgets/ChristmasWidget";
 import LocalPhotoWidget from "./widgets/UploadedPhotosWidget";
+import HockeyScoreWidget from "./widgets/HockeyScoreWidget";
 
 
 interface FramedInfoPanelProps {
@@ -66,7 +66,7 @@ export default function LoggedInHomePage({ session, supabase, onLogout }: Framed
         ]} />
         <LocalPhotoWidget session={session} supabase={supabase} />
         <StattrakWidget session={session} supabase={supabase} widgetId={1} />
-        <ChristmasWidget timezone="Pacific/Honolulu" />
+        <HockeyScoreWidget />
         <DiscordWidget session={session} supabase={supabase} widgetId={1}/>
         <MultiLeagueManager userId = {"997726544653021184"} leagueIds={["1264635784598663168", "1208435206395011072", "1200542341140578304"]} />
       </main>

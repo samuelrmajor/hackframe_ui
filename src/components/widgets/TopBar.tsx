@@ -104,6 +104,28 @@ export default function TopBar({ zipcode }: TopBarProps) {
 
     const timeZone = location?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
     
+    const getDaysUntilChristmas = () => {
+        const nowInTz = new Date(now.toLocaleString("en-US", { timeZone }));
+        const month = nowInTz.getMonth();
+        
+        // Show only in Nov (10), Dec (11), or Jan (0)
+        if (month === 10 || month === 11 || month === 0) {
+             const currentYear = nowInTz.getFullYear();
+             // Create Christmas date object (using local time construction to match nowInTz which is "shifted" to local)
+             let christmas = new Date(currentYear, 11, 25);
+             
+             if (nowInTz > christmas) {
+                 christmas = new Date(currentYear + 1, 11, 25);
+             }
+             
+             const timeDiff = christmas.getTime() - nowInTz.getTime();
+             return Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        }
+        return null;
+    };
+
+    const daysUntilChristmas = getDaysUntilChristmas();
+
     const dateStr = now.toLocaleDateString(undefined, {
         weekday: "short",
         month: "short",
@@ -122,7 +144,15 @@ export default function TopBar({ zipcode }: TopBarProps) {
             animate={{ opacity: 1, y: 0 }}
             className="w-full mb-4 p-4 rounded-2xl bg-white/10 backdrop-blur-lg flex justify-between items-center shadow-lg border border-white/20"
         >
-            <div className="text-gray-200 text-lg">{dateStr}</div>
+            <div className="flex items-center gap-4">
+                <div className="text-gray-200 text-lg">{dateStr}</div>
+                {daysUntilChristmas !== null && (
+                    <div className="flex items-center gap-2 text-green-400 font-bold border-l border-white/20 pl-4">
+                        <span>🎄</span>
+                        <span>{daysUntilChristmas === 0 ? "Merry Christmas!" : `${daysUntilChristmas} days`}</span>
+                    </div>
+                )}
+            </div>
             <div className="text-3xl font-bold text-white tracking-tight">{timeStr}</div>
             <div className="flex items-center gap-2 text-gray-200">
                 {weather ? (
