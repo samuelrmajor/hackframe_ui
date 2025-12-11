@@ -81,7 +81,7 @@ export default function HockeyScoreWidget({ timezone = "America/New_York" }: Hoc
             <div className="flex flex-col gap-1 w-full h-full">
                 <div className="flex items-center justify-between sticky top-0 bg-transparent backdrop-blur-sm py-0.5 z-10">
                     <h3 className="text-white/90 text-[10px] font-bold uppercase tracking-wider">NHL</h3>
-                    <span className="text-[9px] text-white/40">{new Date().toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}</span>
+                    <span className="text-[9px] text-white/40">{new Date().toLocaleDateString("en-US", { month: 'numeric', day: 'numeric', timeZone: timezone })}</span>
                 </div>
                 
                 <div className="flex flex-col gap-1 overflow-y-auto pr-1 custom-scrollbar">
