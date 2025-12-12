@@ -199,6 +199,7 @@ export default function CalendarWidget({ events = [], timezone }: CalendarWidget
               <div
                 key={idx}
                 onClick={() => handleDayClick(date.day, date.isCurrentMonth)}
+                style={{ backgroundColor: date.isToday ? '#4f46e5' : undefined }}
                 className={`
                   flex flex-col items-center justify-center rounded transition-all relative
                   ${date.isToday 
