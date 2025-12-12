@@ -17,21 +17,21 @@ export default function StattrakWidget({ session, supabase, widgetId = 1 }: Stat
         let cleanup: (() => void) | undefined;
 
         const setupRealtime = async () => {
-            // Fetch initial row from table `widget_stattrack`
+            // Fetch initial row from table `widget_stattrak`
             try {
                 const { data, error } = await supabase
-                    .from("widget_stattrack")
+                    .from("widget_stattrak")
                     .select("*")
                     .eq("id", widgetId)
                     .maybeSingle();
 
                 if (error) {
-                    console.error("Failed to fetch widget_stattrack row:", error);
+                    console.error("Failed to fetch widget_stattrak row:", error);
                 } else {
                     setStattrakData(data ?? null);
                 }
             } catch (err) {
-                console.error("Error fetching widget_stattrack row:", err);
+                console.error("Error fetching widget_stattrak row:", err);
             }
 
             // then set up realtime

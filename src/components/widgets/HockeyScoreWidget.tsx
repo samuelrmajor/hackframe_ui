@@ -36,7 +36,7 @@ interface HockeyScoreWidgetProps {
     timezone?: string;
 }
 
-export default function HockeyScoreWidget({ timezone = "America/New_York" }: HockeyScoreWidgetProps) {
+export default function HockeyScoreWidget({ timezone }: HockeyScoreWidgetProps) {
     const [games, setGames] = useState<Game[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -98,7 +98,7 @@ export default function HockeyScoreWidget({ timezone = "America/New_York" }: Hoc
     );
 }
 
-function GameItem({ game, timezone }: { game: Game; timezone: string }) {
+function GameItem({ game, timezone }: { game: Game; timezone?: string }) {
     const isLive = game.status === "LIVE" || game.status === "CRIT";
     const isPre = game.status === "PRE" || game.status === "FUT";
     const isFinal = game.status === "FINAL" || game.status === "OFF";

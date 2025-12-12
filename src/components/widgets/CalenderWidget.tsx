@@ -9,18 +9,34 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-interface Birthday {
+interface CalendarEvent {
   name: string;
   month: number; // 0-11 (JavaScript month format)
   day: number;   // 1-31
+  type?: 'birthday' | 'holiday' | 'other';
 }
 
 interface CalendarWidgetProps {
-  birthdays?: Birthday[];
+  events?: CalendarEvent[];
   timezone?: string; // e.g., "America/New_York"
 }
 
-export default function CalendarWidget({ birthdays = [], timezone = "America/New_York" }: CalendarWidgetProps) {
+const getEventIcon = (event: CalendarEvent) => {
+  if (event.type === 'birthday') return '🎂';
+  if (event.type === 'holiday') {
+    const name = event.name.toLowerCase();
+    if (name.includes('christmas')) return '🎄';
+    if (name.includes('thanksgiving') || name.includes('turkey')) return '🦃';
+    if (name.includes('new year')) return '🎆';
+    if (name.includes('halloween')) return '🎃';
+    if (name.includes('easter')) return '🐰';
+    if (name.includes('valentine')) return '❤️';
+    return '🎉';
+  }
+  return '📅';
+};
+
+export default function CalendarWidget({ events = [], timezone }: CalendarWidgetProps) {
   const [now, setNow] = useState<Date>(new Date());
   const [currentDate, setCurrentDate] = useState(now);
   const [selectedDay, setSelectedDay] = useState<number | null>(now.getDate());
@@ -60,26 +76,26 @@ export default function CalendarWidget({ birthdays = [], timezone = "America/New
     });
   }
   
-  // Find birthdays for current month
-  const birthdaysThisMonth = birthdays.filter(b => b.month === month);
-  const getBirthdaysForDay = (day: number) => 
-    birthdaysThisMonth.filter(b => b.day === day);
+  // Find events for current month
+  const eventsThisMonth = events.filter(e => e.month === month);
+  const getEventsForDay = (day: number) => 
+    eventsThisMonth.filter(e => e.day === day);
   
-  // Get birthdays for selected day (or today if current month and no selection)
-  const selectedDayBirthdays = selectedDay 
-    ? getBirthdaysForDay(selectedDay) 
+  // Get events for selected day (or today if current month and no selection)
+  const selectedDayEvents = selectedDay 
+    ? getEventsForDay(selectedDay) 
     : isCurrentMonth 
-    ? getBirthdaysForDay(today)
+    ? getEventsForDay(today)
     : [];
   
   // Current month's days
   for (let i = 1; i <= daysInMonth; i++) {
-    const dayBirthdays = getBirthdaysForDay(i);
+    const dayEvents = getEventsForDay(i);
     calendarDays.push({
       day: i,
       isCurrentMonth: true,
       isToday: isCurrentMonth && i === today,
-      birthdays: dayBirthdays
+      events: dayEvents
     });
   }
   
@@ -148,14 +164,18 @@ export default function CalendarWidget({ birthdays = [], timezone = "America/New
           </div>
         </div>
 
-        {/* Birthday display for selected day */}
-        {selectedDayBirthdays.length > 0 && (
-          <div className="bg-pink-500/20 border border-pink-500/40 rounded px-2 py-1.5 flex-shrink-0">
-            <div className="text-xs font-semibold text-pink-300 mb-0.5">
-              🎂 Birthday{selectedDayBirthdays.length > 1 ? 's' : ''}:
+        {/* Event display for selected day */}
+        {selectedDayEvents.length > 0 && (
+          <div className="bg-white/10 border border-white/20 rounded px-2 py-1.5 flex-shrink-0">
+            <div className="text-xs font-semibold text-gray-300 mb-0.5">
+              Events:
             </div>
-            <div className="text-xs text-white">
-              {selectedDayBirthdays.map(b => b.name).join(", ")}
+            <div className="text-xs text-white flex flex-col gap-0.5">
+              {selectedDayEvents.map((e, i) => (
+                 <div key={i}>
+                    {getEventIcon(e)} {e.name}
+                 </div>
+              ))}
             </div>
           </div>
         )}
@@ -172,7 +192,7 @@ export default function CalendarWidget({ birthdays = [], timezone = "America/New
         {/* Calendar grid */}
         <div className="grid grid-cols-7 gap-0.5 text-center text-xs flex-1">
           {calendarDays.map((date, idx) => {
-            const hasBirthday = date.birthdays && date.birthdays.length > 0;
+            const hasEvent = date.events && date.events.length > 0;
             const isSelected = date.isCurrentMonth && selectedDay === date.day;
             
             return (
@@ -187,13 +207,15 @@ export default function CalendarWidget({ birthdays = [], timezone = "America/New
                     ? "bg-white/5 text-gray-200 hover:bg-white/10 cursor-pointer"
                     : "bg-transparent text-gray-600"
                   }
-                  ${hasBirthday && date.isCurrentMonth ? "ring-2 ring-pink-500" : ""}
+                  ${hasEvent && date.isCurrentMonth ? "ring-2 ring-pink-500" : ""}
                   ${isSelected && !date.isToday ? "ring-2 ring-white/40" : ""}
                 `}
               >
                 <span>{date.day}</span>
-                {hasBirthday && date.isCurrentMonth && (
-                  <span className="text-[10px] leading-none">🎂</span>
+                {hasEvent && date.isCurrentMonth && (
+                  <span className="text-[10px] leading-none">
+                    {getEventIcon(date.events[0])}
+                  </span>
                 )}
               </div>
             );

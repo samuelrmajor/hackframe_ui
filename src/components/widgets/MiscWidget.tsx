@@ -3,7 +3,7 @@
 
 // import Card from "./Card";
 
-
+//https://api-web.nhle.com/v1/schedule/now
 export default function MiscWidget() {
 
     return (
