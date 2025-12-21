@@ -124,3 +124,4 @@ TODOS:
  - Update email service to use my custom domain
  - Update account creation to create an image bucket
  - allow users to upload and delete their images
+ - Custom User Settings

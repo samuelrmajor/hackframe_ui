@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 
 interface TopBarProps {
     zipcode: string;
+    onSettingsClick?: () => void;
+    showSettingsButton?: boolean;
+    onTopBarClick?: () => void;
 }
 
 interface WeatherData {
@@ -30,7 +33,12 @@ const getWeatherEmoji = (condition: string): string => {
     return "🌤️";
 };
 
-export default function TopBar({ zipcode }: TopBarProps) {
+export default function TopBar({
+    zipcode,
+    onSettingsClick,
+    showSettingsButton = false,
+    onTopBarClick,
+}: TopBarProps) {
     const [now, setNow] = useState(new Date());
     const [weather, setWeather] = useState<WeatherData | null>(null);
     const [location, setLocation] = useState<LocationData | null>(null);
@@ -142,6 +150,7 @@ export default function TopBar({ zipcode }: TopBarProps) {
         <motion.header
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
+            onClick={onTopBarClick}
             className="w-full mb-4 p-4 rounded-2xl bg-white/10 backdrop-blur-lg flex justify-between items-center shadow-lg border border-white/20"
         >
             <div className="flex items-center gap-4">
@@ -157,13 +166,25 @@ export default function TopBar({ zipcode }: TopBarProps) {
                 )}
             </div>
             <div className="text-3xl font-bold text-white tracking-tight">{timeStr}</div>
-            <div className="flex items-center gap-2 text-gray-200">
+            <div className="flex items-center gap-3 text-gray-200">
                 {weather ? (
                     <>
                         {getWeatherEmoji(weather.condition)} <span>{weather.temperature}°F</span>
                     </>
                 ) : (
                     <span>Loading...</span>
+                )}
+
+                {showSettingsButton && (
+                    <button
+                        type="button"
+                        onClick={onSettingsClick}
+                        className="ml-2 inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-2 py-2 hover:bg-white/10"
+                        aria-label="Open menu"
+                        title="Menu"
+                    >
+                        ⚙️
+                    </button>
                 )}
             </div>
         </motion.header>
