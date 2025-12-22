@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import LocalPhotoManagerView from "./LocalPhotoManagerView";
 
 export interface WidgetSettingsViewProps {
   onBack: () => void;
@@ -103,6 +104,25 @@ const WIDGET_DEFINITIONS: Record<WidgetId, WidgetDefinitionWithSchema> = {
       events: [
         { name: "Beanie", month: 1, day: 15, type: "birthday" },
         { name: "Evan", month: 2, day: 20, type: "birthday" },
+        { name: "Kevin", month: 5, day: 9, type: "birthday" },
+        { name: "Gus", month: 5, day: 30, type: "birthday" },
+        { name: "Sam M", month: 6, day: 12, type: "birthday" },
+        { name: "Harry", month: 7, day: 1, type: "birthday" },
+        { name: "Niko", month: 8, day: 20, type: "birthday" },
+        { name: "Taylor", month: 9, day: 27, type: "birthday" },
+        { name: "Chase", month: 9, day: 30, type: "birthday" },
+        { name: "Jackson", month: 1, day: 18, type: "birthday" },
+        { name: "Sam P", month: 2, day: 2, type: "birthday" },
+        { name: "Michael", month: 2, day: 20, type: "birthday" },
+        { name: "Ido", month: 3, day: 16, type: "birthday" },
+        { name: "Bibble", month: 3, day: 20, type: "birthday" },
+        { name: "Dave", month: 5, day: 12, type: "birthday" },
+        { name: "Mark", month: 10, day: 20, type: "birthday" },
+        { name: "Christmas", month: 11, day: 25, type: "holiday" },
+        { name: "New Year's Eve", month: 11, day: 31, type: "holiday" },
+        { name: "New Year's Day", month: 0, day: 1, type: "holiday" },
+        { name: "Valentine's Day", month: 1, day: 14, type: "holiday" },
+        { name: "Halloween", month: 9, day: 31, type: "holiday" },
       ],
     },
     configSchema: [
@@ -165,6 +185,8 @@ type WidgetFormMode =
   | { mode: "create"; widget: WidgetDefinitionWithSchema }
   | { mode: "edit"; widget: WidgetDefinitionWithSchema; row: UserWidgetRow };
 
+type ConfigSubView = "list" | "form" | "photo_manager";
+
 export default function WidgetSettingsView({
   onBack,
   supabase,
@@ -173,6 +195,8 @@ export default function WidgetSettingsView({
   widgetsLoading,
   widgetsError,
 }: WidgetSettingsViewProps) {
+  const [subView, setSubView] = useState<ConfigSubView>("list");
+  const [photoManagerWidget, setPhotoManagerWidget] = useState<UserWidgetRow | null>(null);
   const [userWidgets, setUserWidgets] = useState<UserWidgetRow[] | null>(null);
   const [userWidgetsError, setUserWidgetsError] = useState<string | null>(null);
   const [userWidgetsLoading, setUserWidgetsLoading] = useState(false);
@@ -202,6 +226,8 @@ export default function WidgetSettingsView({
     setWidgetConfigJsonDraft("");
     setSaveWidgetConfigError(null);
     setSavingWidgetConfig(false);
+    setSubView("list");
+    setPhotoManagerWidget(null);
   };
 
   const effectiveWidgets = useMemo(() => {
@@ -266,9 +292,21 @@ export default function WidgetSettingsView({
     );
     setSaveWidgetConfigError(null);
     setConfigureNewStep("form");
+    setSubView("form");
+  };
+
+  const openPhotoManager = (row: UserWidgetRow) => {
+    setPhotoManagerWidget(row);
+    setSubView("photo_manager");
   };
 
   const openEditForm = (row: UserWidgetRow) => {
+    // Special-case: picture scroller uses storage management UI
+    if (row.widget_type === "picture_scroller") {
+      openPhotoManager(row);
+      return;
+    }
+
     const id = row.widget_type as WidgetId;
     const def = WIDGET_DEFINITIONS[id];
     if (!def) {
@@ -288,6 +326,7 @@ export default function WidgetSettingsView({
     );
     setSaveWidgetConfigError(null);
     setConfigureNewStep("form");
+    setSubView("form");
   };
 
   const parseAndValidateConfig = (def: WidgetDefinitionWithSchema): { ok: true; cfg: any } | { ok: false; error: string } => {
@@ -414,6 +453,19 @@ export default function WidgetSettingsView({
     }
   };
 
+  if (subView === "photo_manager" && photoManagerWidget) {
+    return (
+      <LocalPhotoManagerView
+        supabase={supabase}
+        userId={userId}
+        onBack={() => {
+          setSubView("list");
+          setPhotoManagerWidget(null);
+        }}
+      />
+    );
+  }
+
   return (
     <main className="flex-1 min-h-0">
       <div className="rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-4">
@@ -464,7 +516,7 @@ export default function WidgetSettingsView({
             </div>
           )}
 
-          {configureNewStep === "form" && selectedWidget && (
+          {configureNewStep === "form" && selectedWidget && subView === "form" && (
             <div className="rounded-xl border border-white/20 bg-white/5 p-3 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

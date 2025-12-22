@@ -13,6 +13,7 @@ type DisplaySettingsDraft = {
   layout: {
     type: LayoutType;
   };
+  userZip: string;
 };
 
 type UserWidgetRow = {
@@ -37,6 +38,7 @@ const normalizeWidgetIds = (raw: unknown): number[] => {
 export default function DisplaySettingsView({ onBack, supabase, userId }: DisplaySettingsViewProps) {
   const [draft, setDraft] = useState<DisplaySettingsDraft>({
     layout: { type: "six_tile_grid" },
+    userZip: "",
   });
 
   const [allWidgets, setAllWidgets] = useState<UserWidgetRow[]>([]);
@@ -78,7 +80,7 @@ export default function DisplaySettingsView({ onBack, supabase, userId }: Displa
       const [displayRes, widgetsRes] = await Promise.all([
         supabase
           .from("user_display")
-          .select("id,layout_setting,widget_ids")
+          .select("id,layout_setting,widget_ids,user_zip")
           .eq("user_id", userId)
           .order("id", { ascending: false })
           .limit(1)
@@ -121,9 +123,13 @@ export default function DisplaySettingsView({ onBack, supabase, userId }: Displa
       // Best-effort hydrate layout selection from layout_setting (if present and compatible)
       const layoutSetting = (displayRes.data?.layout_setting ?? null) as any;
       const layoutType = layoutSetting?.widget_settings?.layout?.type;
-      if (layoutType === "six_tile_grid") {
-        setDraft({ layout: { type: layoutType } });
-      }
+      const nextLayout: LayoutType = layoutType === "six_tile_grid" ? layoutType : "six_tile_grid";
+
+      setDraft((cur) => ({
+        ...cur,
+        layout: { type: nextLayout },
+        userZip: (displayRes.data as any)?.user_zip ?? "",
+      }));
 
       console.log("[DisplaySettingsView] loaded panel widgets:", idsToApply);
     } catch (e) {
@@ -152,6 +158,7 @@ export default function DisplaySettingsView({ onBack, supabase, userId }: Displa
 
     const payload = {
       user_id: userId,
+      user_zip: draft.userZip?.trim() || null,
       widget_ids: paddedToSave.map(String),
       layout_setting: {
         widget_settings: {
@@ -175,6 +182,7 @@ export default function DisplaySettingsView({ onBack, supabase, userId }: Displa
           .update({
             widget_ids: payload.widget_ids,
             layout_setting: payload.layout_setting,
+            user_zip: payload.user_zip,
           })
           .eq("id", userDisplayId)
           .select("id")
@@ -209,6 +217,7 @@ export default function DisplaySettingsView({ onBack, supabase, userId }: Displa
             .update({
               widget_ids: payload.widget_ids,
               layout_setting: payload.layout_setting,
+              user_zip: payload.user_zip,
             })
             .eq("id", targetId)
             .select("id")
@@ -224,7 +233,11 @@ export default function DisplaySettingsView({ onBack, supabase, userId }: Displa
           if (updateNewestRes.error) throw updateNewestRes.error;
         } else {
           // Truly no row exists -> insert
-          const insertRes = await supabase.from("user_display").insert(payload).select("id").maybeSingle();
+          const insertRes = await supabase
+            .from("user_display")
+            .insert(payload)
+            .select("id")
+            .maybeSingle();
 
           console.log("[DisplaySettingsView] user_display insert response", {
             data: insertRes.data,
@@ -282,13 +295,23 @@ export default function DisplaySettingsView({ onBack, supabase, userId }: Displa
       <div className="rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-semibold">Display Settings</h2>
-          <button
-            type="button"
-            className="rounded-lg border border-white/20 bg-white/5 px-3 py-1 hover:bg-white/10"
-            onClick={onBack}
-          >
-            Back
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="rounded-lg border border-white/20 bg-white/5 px-3 py-1 hover:bg-white/10 disabled:opacity-50"
+              disabled={saving}
+              onClick={persist}
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+            <button
+              type="button"
+              className="rounded-lg border border-white/20 bg-white/5 px-3 py-1 hover:bg-white/10"
+              onClick={onBack}
+            >
+              Back
+            </button>
+          </div>
         </div>
 
         {loading && <div className="text-sm text-gray-300">Loading...</div>}
@@ -297,16 +320,37 @@ export default function DisplaySettingsView({ onBack, supabase, userId }: Displa
         {!loading && !error && (
           <div className="space-y-6">
             <section>
+              <h3 className="text-lg font-semibold mb-2">Location</h3>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-gray-300" htmlFor="userZip">
+                  Zip code
+                </label>
+                <input
+                  id="userZip"
+                  inputMode="numeric"
+                  className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-white/20"
+                  value={draft.userZip}
+                  onChange={(e) => setDraft((cur) => ({ ...cur, userZip: e.target.value }))}
+                  placeholder="e.g. 12210"
+                />
+                <div className="text-xs text-gray-400">
+                  Used by widgets that display local info (weather, etc.).
+                </div>
+              </div>
+            </section>
+
+            <section>
               <h3 className="text-lg font-semibold mb-2">Layout</h3>
               <select
                 className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-white/20"
                 value={draft.layout.type}
                 onChange={(e) =>
-                  setDraft({
+                  setDraft((cur) => ({
+                    ...cur,
                     layout: {
                       type: e.target.value as LayoutType,
                     },
-                  })
+                  }))
                 }
               >
                 {layoutOptions.map((opt) => (
@@ -322,14 +366,6 @@ export default function DisplaySettingsView({ onBack, supabase, userId }: Displa
             <section>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-lg font-semibold">Panels</h3>
-                <button
-                  type="button"
-                  className="rounded-lg border border-white/20 bg-white/5 px-3 py-2 hover:bg-white/10 disabled:opacity-50"
-                  disabled={saving}
-                  onClick={persist}
-                >
-                  {saving ? "Saving..." : "Save"}
-                </button>
               </div>
 
               {saveError && <div className="mb-2 text-sm text-red-300">{saveError}</div>}

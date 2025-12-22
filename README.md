@@ -115,13 +115,17 @@ TopBar
 UploadedPhotosWidget
 - Needs work, but basically there is a storage bucket called "images" & users have access to this bucket.
 - The images are pulled down and cached or whatever - then they are rendered on screen
-- TODO: actually creating the bucket as i did this manually for davids fake account
+
+
+
+NEW: Account / Widget settings
+
+
 
 
 
 
 TODOS:
  - Update email service to use my custom domain
- - Update account creation to create an image bucket
- - allow users to upload and delete their images
- - Custom User Settings
+ - Update hockey to match the current Stattrak impl
+ - Update Stattrak to no longer use the current impl - instead, client calls directly to the steam api.

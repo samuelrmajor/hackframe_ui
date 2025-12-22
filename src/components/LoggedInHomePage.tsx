@@ -38,6 +38,7 @@ export default function LoggedInHomePage({
   const [widgetIds, setWidgetIds] = useState<number[]>([]);
   const [widgetsLoading, setWidgetsLoading] = useState(false);
   const [widgetsError, setWidgetsError] = useState<string | null>(null);
+  const [userZip, setUserZip] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return;
@@ -72,7 +73,7 @@ export default function LoggedInHomePage({
         const [displayRes, widgetsRes] = await Promise.all([
           supabase
             .from("user_display")
-            .select("layout_setting,widget_ids")
+            .select("layout_setting,widget_ids,user_zip")
             .eq("user_id", userId)
             .maybeSingle(),
           supabase
@@ -102,10 +103,15 @@ export default function LoggedInHomePage({
               .filter((x) => typeof x === "number" && Number.isFinite(x))
           : [];
 
+        setUserZip(displayRes.data?.user_zip ?? null);
+
         // Sentinel -1 means "intentionally empty"
         const widgetIdsUnique = Array.from(new Set(normalizedWidgetIds));
-        if (widgetIdsUnique.length === 1 && widgetIdsUnique[0] === -1) {
-          setWidgetIds([-1]);
+        const isAllEmpty =
+          widgetIdsUnique.length === 1 && widgetIdsUnique[0] === -1;
+
+        if (isAllEmpty) {
+          setWidgetIds([]);
           setWidgets([]);
           return;
         }
@@ -202,7 +208,7 @@ export default function LoggedInHomePage({
       onClick={handleClick}
     >
       <TopBar
-        zipcode="12210"
+        zipcode={userZip ?? ""}
         showSettingsButton={showSettingsButton}
         onSettingsClick={() => setRoute("menu")}
         onTopBarClick={revealSettingsTemporarily}
