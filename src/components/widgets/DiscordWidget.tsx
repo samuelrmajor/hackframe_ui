@@ -22,46 +22,58 @@ interface DiscordServer {
   users: DiscordUser[];
 }
 
+interface DiscordWidgetRow {
+  id: number;
+  discord_details: DiscordServer[] | null;
+}
+
 interface DiscordWidgetProps {
   session: Session;
   supabase: SupabaseClient;
-  widgetId?: number;
+  discord_server_id: String;
 }
 
-export default function DiscordWidget({ session,supabase, widgetId }: DiscordWidgetProps) {
-  const [discord_data, setDiscordData] = useState<DiscordServer[] | null>(null);
+export default function DiscordWidget({ session, supabase, discord_server_id }: DiscordWidgetProps) {
+  const [discordData, setDiscordData] = useState<DiscordWidgetRow | null>(null);
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
 
     const setupRealtime = async () => {
       // Fetch initial row from table `widget_discord`
+      let initialRow: DiscordWidgetRow | null = null;
       try {
         const { data, error } = await supabase
           .from("widget_discord")
-          .select("*")
-          .eq("id", widgetId)
+          .select("id, discord_details")
+          .eq("discord_server_id", discord_server_id)
           .maybeSingle();
 
         if (error) {
           console.error("Failed to fetch widget_discord row:", error);
         } else {
-          setDiscordData(data?.discord_details ?? null);
+          initialRow = (data as DiscordWidgetRow | null) ?? null;
+          setDiscordData(initialRow);
         }
       } catch (err) {
         console.error("Error fetching widget_discord row:", err);
       }
 
-      // then set up realtime
+      // then set up realtime (channel key must remain widget_discord:widgetID:update)
       try {
+        if (!initialRow?.id) return;
+
         await supabase.realtime.setAuth(session.access_token); // Needed for Realtime Authorization
         const channel = supabase
-          .channel(`widget_discord:${widgetId}:update`, {
+          .channel(`widget_discord:${initialRow.id}:update`, {
             config: { private: true },
           })
           .on("broadcast", { event: "discord_update" }, (payload) => {
             if (payload.payload?.record?.discord_details) {
-              setDiscordData(payload.payload.record.discord_details);
+              setDiscordData((prev) => ({
+                id: prev?.id ?? initialRow.id,
+                discord_details: payload.payload.record.discord_details,
+              }));
             }
           })
           .subscribe();
@@ -79,21 +91,27 @@ export default function DiscordWidget({ session,supabase, widgetId }: DiscordWid
     return () => {
       if (cleanup) cleanup();
     };
-  }, [supabase, widgetId]);
+  }, [supabase, session.access_token, discord_server_id]);
+
+  const discord_details = discordData?.discord_details ?? null;
 
   return (
     <Card centered={false}>
       {/* Render voice channel style UI */}
-      {discord_data && discord_data.length > 0 ? (
+      {discord_details && discord_details.length > 0 ? (
         <div className="flex flex-col">
-          {discord_data.map((server) => (
+          {discord_details.map((server) => (
             <div key={server.name} className="p-2">
               <div className="text-xs text-gray-400 font-semibold mb-1">{server.name}</div>
               <div>
                 {server.users.map((user) => (
                   <div key={user.username} className="flex items-center gap-3 py-1">
                     {user.avatar_url ? (
-                      <img src={user.avatar_url} alt={user.username} className="w-8 h-8 rounded-full" />
+                      <img
+                        src={user.avatar_url}
+                        alt={user.username}
+                        className="w-8 h-8 rounded-full"
+                      />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-gray-500 flex items-center justify-center text-white">
                         {user.username.charAt(0).toUpperCase()}
@@ -121,9 +139,7 @@ export default function DiscordWidget({ session,supabase, widgetId }: DiscordWid
                           <DiscordVideoIcon />
                         </div>
                       )}
-                      {user.streaming && (
-                        <DiscordLiveIcon />
-                      )}
+                      {user.streaming && <DiscordLiveIcon />}
                     </div>
                   </div>
                 ))}

@@ -1,50 +1,63 @@
 import { useEffect, useState } from "react";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 
-
 import Card from "./Card";
+
+interface StattrakWidgetRow {
+    id: number;
+    stattrak?: number;
+    nametag?: string;
+    skinname?: string;
+    icon_url?: string;
+}
 
 interface StattrakWidgetProps {
     session: Session;
     supabase: SupabaseClient;
-    widgetId?: number;
+    steam_asset_id: string;
+    steam_user_id: string;
 }
 
-export default function StattrakWidget({ session, supabase, widgetId = 1 }: StattrakWidgetProps) {
-    const [stattrak_data, setStattrakData] = useState<any | null>(null);
+export default function StattrakWidget({ session, supabase, steam_asset_id, steam_user_id }: StattrakWidgetProps) {
+    const [stattrakData, setStattrakData] = useState<StattrakWidgetRow | null>(null);
 
     useEffect(() => {
         let cleanup: (() => void) | undefined;
 
         const setupRealtime = async () => {
             // Fetch initial row from table `widget_stattrak`
+            let initialRow: StattrakWidgetRow | null = null;
             try {
                 const { data, error } = await supabase
                     .from("widget_stattrak")
-                    .select("*")
-                    .eq("id", widgetId)
+                    .select("id, stattrak, nametag, skinname, icon_url")
+                    .eq("steam_asset_id", steam_asset_id)
+                    .eq("steam_user_id", steam_user_id)
                     .maybeSingle();
 
                 if (error) {
                     console.error("Failed to fetch widget_stattrak row:", error);
                 } else {
-                    setStattrakData(data ?? null);
+                    initialRow = (data as StattrakWidgetRow | null) ?? null;
+                    setStattrakData(initialRow);
                 }
             } catch (err) {
                 console.error("Error fetching widget_stattrak row:", err);
             }
 
-            // then set up realtime
+            // then set up realtime (channel key must remain widget_stattrak:widgetID:update)
             try {
+                if (!initialRow?.id) return;
+
                 await supabase.realtime.setAuth(session.access_token); // Needed for Realtime Authorization
                 const channel = supabase
-                    .channel(`widget_stattrak:${widgetId}:update`, {
+                    .channel(`widget_stattrak:${initialRow.id}:update`, {
                         config: { private: true },
                     })
-                    .on("broadcast", { event: 'stattrak_update' }, (payload) => {
+                    .on("broadcast", { event: "stattrak_update" }, (payload) => {
                         console.log("Stattrak UPDATE", payload);
                         if (payload.payload?.record) {
-                            setStattrakData(payload.payload.record);
+                            setStattrakData(payload.payload.record as StattrakWidgetRow);
                         }
                     })
                     .subscribe();
@@ -62,12 +75,14 @@ export default function StattrakWidget({ session, supabase, widgetId = 1 }: Stat
         return () => {
             if (cleanup) cleanup();
         };
-    }, [supabase, widgetId]);
+    }, [supabase, session.access_token, steam_asset_id, steam_user_id]);
 
-    const kills = stattrak_data?.stattrak ?? 0;
-    const nametag = stattrak_data?.nametag ?? "UNNAMED";
-    const skinName = stattrak_data?.skinname ?? "";
-    const iconUrl = stattrak_data?.icon_url ? `https://community.cloudflare.steamstatic.com/economy/image/${stattrak_data.icon_url}/330x192` : null;
+    const kills = stattrakData?.stattrak ?? 0;
+    const nametag = stattrakData?.nametag ?? "UNNAMED";
+    const skinName = stattrakData?.skinname ?? "";
+    const iconUrl = stattrakData?.icon_url
+        ? `https://community.cloudflare.steamstatic.com/economy/image/${stattrakData.icon_url}/330x192`
+        : null;
 
     // Colors per user's request
     const COLOR_INACTIVE = "#2a1a1a"; // Dark reddish/brown background for unlit pixels

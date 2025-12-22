@@ -40,9 +40,18 @@ export default function WidgetDisplayScreen({ session, supabase }: WidgetDisplay
         ]}
       />
       <LocalPhotoWidget session={session} supabase={supabase} />
-      <StattrakWidget session={session} supabase={supabase} widgetId={1} />
+      <StattrakWidget
+        session={session}
+        supabase={supabase}
+        steam_asset_id={"45575185939"}
+        steam_user_id={"76561198084337727"}
+      />
       <HockeyScoreWidget />
-      <DiscordWidget session={session} supabase={supabase} widgetId={1} />
+      <DiscordWidget
+        session={session}
+        supabase={supabase}
+        discord_server_id="434555040997441537"
+      />
       <MultiLeagueManager
         userId={"997726544653021184"}
         leagueIds={[
