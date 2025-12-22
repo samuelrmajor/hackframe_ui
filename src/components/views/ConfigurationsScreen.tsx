@@ -11,9 +11,15 @@ export interface ConfigurationsScreenProps {
   session: Session;
   supabase: SupabaseClient;
   onBack?: () => void;
+  widgetIds?: number[];
 }
 
-export default function ConfigurationsScreen({ session, supabase, onBack }: ConfigurationsScreenProps) {
+export default function ConfigurationsScreen({
+  session,
+  supabase,
+  onBack,
+  widgetIds,
+}: ConfigurationsScreenProps) {
   const [view, setView] = useState<ConfigurationsView>("menu");
 
   const userId = session?.user?.id;
@@ -29,7 +35,33 @@ export default function ConfigurationsScreen({ session, supabase, onBack }: Conf
   }
 
   if (view === "display") {
-    return <DisplaySettingsView onBack={() => setView("menu")} />;
+    if (!userId) {
+      return (
+        <main className="flex-1 min-h-0">
+          <div className="rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-semibold">Display Settings</h2>
+              <button
+                type="button"
+                className="rounded-lg border border-white/20 bg-white/5 px-3 py-1 hover:bg-white/10"
+                onClick={() => setView("menu")}
+              >
+                Back
+              </button>
+            </div>
+            <div className="text-sm text-red-300">You must be logged in.</div>
+          </div>
+        </main>
+      );
+    }
+
+    return (
+      <DisplaySettingsView
+        onBack={() => setView("menu")}
+        supabase={supabase}
+        userId={userId}
+      />
+    );
   }
 
   if (view === "widgets") {
@@ -58,6 +90,7 @@ export default function ConfigurationsScreen({ session, supabase, onBack }: Conf
         onBack={() => setView("menu")}
         supabase={supabase}
         userId={userId}
+        widgetIds={widgetIds}
       />
     );
   }
@@ -101,7 +134,7 @@ export default function ConfigurationsScreen({ session, supabase, onBack }: Conf
             className="w-full text-left rounded-xl border border-white/20 bg-white/5 px-4 py-3 hover:bg-white/10"
             onClick={() => setView("widgets")}
           >
-            Widgets
+            My Widgets
           </button>
           <button
             type="button"

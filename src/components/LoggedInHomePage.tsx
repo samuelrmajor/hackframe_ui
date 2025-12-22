@@ -11,6 +11,14 @@ interface FramedInfoPanelProps {
   onLogout: () => void;
 }
 
+type UserWidgetRow = {
+  id: number;
+  widget_title: string | null;
+  widget_type: string | null;
+  widget_configuration: any | null;
+  requires_config: boolean | null;
+};
+
 export default function LoggedInHomePage({
   session,
   supabase,
@@ -25,6 +33,11 @@ export default function LoggedInHomePage({
 
   const [settingsTemporarilyVisible, setSettingsTemporarilyVisible] = useState(false);
   const settingsRevealTimeoutRef = useRef<number | null>(null);
+
+  const [widgets, setWidgets] = useState<UserWidgetRow[]>([]);
+  const [widgetIds, setWidgetIds] = useState<number[]>([]);
+  const [widgetsLoading, setWidgetsLoading] = useState(false);
+  const [widgetsError, setWidgetsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return;
@@ -52,6 +65,9 @@ export default function LoggedInHomePage({
     if (!userId) return;
 
     const loadUserConfig = async () => {
+      setWidgetsLoading(true);
+      setWidgetsError(null);
+
       try {
         const [displayRes, widgetsRes] = await Promise.all([
           supabase
@@ -61,7 +77,7 @@ export default function LoggedInHomePage({
             .maybeSingle(),
           supabase
             .from("user_widget")
-            .select("id,widget_title,widget_configuration")
+            .select("id,widget_title,widget_type,widget_configuration,requires_config")
             .eq("user_id", userId),
         ]);
 
@@ -69,17 +85,48 @@ export default function LoggedInHomePage({
 
         if (displayRes.error) {
           console.error("[supabase] user_display error", displayRes.error);
-        } else {
-          console.log("[supabase] user_display", displayRes.data);
+          setWidgetsError(displayRes.error.message);
+          return;
         }
 
         if (widgetsRes.error) {
           console.error("[supabase] user_widget error", widgetsRes.error);
-        } else {
-          console.log("[supabase] user_widget", widgetsRes.data);
+          setWidgetsError(widgetsRes.error.message);
+          return;
         }
+
+        const rawWidgetIds = (displayRes.data?.widget_ids ?? []) as unknown;
+        const normalizedWidgetIds: number[] = Array.isArray(rawWidgetIds)
+          ? rawWidgetIds
+              .map((x) => (typeof x === "string" ? Number(x) : (x as any)))
+              .filter((x) => typeof x === "number" && Number.isFinite(x))
+          : [];
+
+        // Sentinel -1 means "intentionally empty"
+        const widgetIdsUnique = Array.from(new Set(normalizedWidgetIds));
+        if (widgetIdsUnique.length === 1 && widgetIdsUnique[0] === -1) {
+          setWidgetIds([-1]);
+          setWidgets([]);
+          return;
+        }
+
+        const widgetRows = (widgetsRes.data ?? []) as UserWidgetRow[];
+        const widgetById = new Map<number, UserWidgetRow>();
+        for (const w of widgetRows) widgetById.set(w.id, w);
+
+        const orderedWidgets = widgetIdsUnique
+          .map((id) => widgetById.get(id))
+          .filter(Boolean) as UserWidgetRow[];
+
+        setWidgetIds(widgetIdsUnique);
+        setWidgets(orderedWidgets);
       } catch (err) {
-        if (!cancelled) console.error("[supabase] loadUserConfig unexpected error", err);
+        if (!cancelled) {
+          console.error("[supabase] loadUserConfig unexpected error", err);
+          setWidgetsError(err instanceof Error ? err.message : String(err));
+        }
+      } finally {
+        if (!cancelled) setWidgetsLoading(false);
       }
     };
 
@@ -131,12 +178,21 @@ export default function LoggedInHomePage({
           <ConfigurationsScreen
             session={session}
             supabase={supabase}
+            widgetIds={widgetIds}
             onBack={() => setRoute("menu")}
           />
         );
       case "widgets":
       default:
-        return <WidgetDisplayScreen session={session} supabase={supabase} />;
+        return (
+          <WidgetDisplayScreen
+            session={session}
+            supabase={supabase}
+            widgets={widgets}
+            widgetsLoading={widgetsLoading}
+            widgetsError={widgetsError}
+          />
+        );
     }
   };
 

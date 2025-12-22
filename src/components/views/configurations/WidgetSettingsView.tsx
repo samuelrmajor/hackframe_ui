@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface WidgetSettingsViewProps {
   onBack: () => void;
   supabase: SupabaseClient;
   userId: string;
+  widgets?: UserWidgetRow[];
+  widgetsLoading?: boolean;
+  widgetsError?: string | null;
+  widgetIds?: number[];
 }
 
 type UserWidgetRow = {
@@ -161,7 +165,14 @@ type WidgetFormMode =
   | { mode: "create"; widget: WidgetDefinitionWithSchema }
   | { mode: "edit"; widget: WidgetDefinitionWithSchema; row: UserWidgetRow };
 
-export default function WidgetSettingsView({ onBack, supabase, userId }: WidgetSettingsViewProps) {
+export default function WidgetSettingsView({
+  onBack,
+  supabase,
+  userId,
+  widgets,
+  widgetsLoading,
+  widgetsError,
+}: WidgetSettingsViewProps) {
   const [userWidgets, setUserWidgets] = useState<UserWidgetRow[] | null>(null);
   const [userWidgetsError, setUserWidgetsError] = useState<string | null>(null);
   const [userWidgetsLoading, setUserWidgetsLoading] = useState(false);
@@ -193,7 +204,18 @@ export default function WidgetSettingsView({ onBack, supabase, userId }: WidgetS
     setSavingWidgetConfig(false);
   };
 
+  const effectiveWidgets = useMemo(() => {
+    // If parent provided widgets, treat them as source of truth, else fall back to local load.
+    return widgets ?? userWidgets ?? [];
+  }, [widgets, userWidgets]);
+
+  const effectiveLoading = widgetsLoading ?? userWidgetsLoading;
+  const effectiveError = widgetsError ?? userWidgetsError;
+
   const loadUserWidgets = async () => {
+    // If parent is providing widgets, don't overwrite them.
+    if (widgets) return;
+
     setUserWidgetsLoading(true);
     setUserWidgetsError(null);
     try {
@@ -223,7 +245,7 @@ export default function WidgetSettingsView({ onBack, supabase, userId }: WidgetS
     };
 
     run();
-  }, [userId]);
+  }, [userId, widgets]);
 
   const onClickConfigureNew = () => {
     setCreateWidgetError(null);
@@ -570,16 +592,16 @@ export default function WidgetSettingsView({ onBack, supabase, userId }: WidgetS
           )}
         </div>
 
-        {userWidgetsLoading && <div className="text-sm text-gray-300">Loading...</div>}
+        {effectiveLoading && <div className="text-sm text-gray-300">Loading...</div>}
 
-        {userWidgetsError && <div className="text-sm text-red-300">{userWidgetsError}</div>}
+        {effectiveError && <div className="text-sm text-red-300">{effectiveError}</div>}
 
-        {!userWidgetsLoading && !userWidgetsError && (
+        {!effectiveLoading && !effectiveError && (
           <div className="space-y-3">
-            {(userWidgets ?? []).length === 0 ? (
+            {(effectiveWidgets ?? []).length === 0 ? (
               <div className="text-sm text-gray-300">No widgets found.</div>
             ) : (
-              (userWidgets ?? []).map((w) => {
+              (effectiveWidgets ?? []).map((w) => {
                 const needsConfig = w.widget_configuration == null && w.requires_config === true;
 
                 return (
